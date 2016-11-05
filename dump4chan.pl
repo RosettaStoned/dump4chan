@@ -17,17 +17,17 @@ binmode(STDERR, ":utf8");
 
 $ENV{TMPDIR} = "/tmp";
 
-my %params = (
+my $params = {
     dir => $ENV{TMPDIR},
     regexp => {
         boards => $ENV{BOARDS},
         files => $ENV{FILES},
     }   
-);
+};
 
 GetOptions(
-    "dir|d=s" => \$params{dir},
-    "boards|b" => \$params{boards},
+    "dir|d=s" => \$$params{dir},
+    "boards|b=s" => \$$params{regexp}{boards},
 );
 
 
@@ -212,7 +212,7 @@ sub get_thread($$)
 
     print STDERR "get_thread\n";
 
-    my $semantic_url_dir = "$params{dir}/4chan/$$thread{semantic_url}";
+    my $semantic_url_dir = "$$params{dir}/4chan/$$thread{semantic_url}";
 
     if(! -d $semantic_url_dir)
     {
@@ -305,9 +305,9 @@ try
         }
     }
 
-    if(! -d "$params{dir}/4chan")
+    if(! -d "$$params{dir}/4chan")
     {
-        mkdir("$params{dir}/4chan");
+        mkdir("$$params{dir}/4chan");
     }
 
     get_boards();
