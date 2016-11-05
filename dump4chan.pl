@@ -19,8 +19,10 @@ $ENV{TMPDIR} = "/tmp";
 
 my %params = (
     dir => $ENV{TMPDIR},
-    boards => $ENV{BOARDS},
-    files => $ENV{FILES},
+    regexp => {
+        boards => $ENV{BOARDS},
+        files => $ENV{FILES},
+    }   
 );
 
 GetOptions(
@@ -280,7 +282,7 @@ sub get_boards()
             {
                 for my $board (@{$$data{boards}})
                 {
-                    if($$board{board} =~ m/^hc|gif$/)
+                    if($$board{board} =~ $$params{regexp}{boards})
                     {
                         get_catalog($board);
                     }
@@ -295,6 +297,14 @@ sub get_boards()
 
 try
 {
+    for my $key (keys %{$$params{regexp}})
+    {
+        if(defined($$params{regexp}{$key}))
+        {
+            $$params{regexp}{$key} = qr/$$params{regexp}{$key}/;
+        }
+    }
+
     if(! -d "$params{dir}/4chan")
     {
         mkdir("$params{dir}/4chan");
