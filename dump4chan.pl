@@ -7,6 +7,7 @@ use autodie;
 use Try::Tiny;
 use AnyEvent;
 use AnyEvent::HTTP;
+use File::Path qw(make_path remove_tree);
 use Getopt::Long;
 use JSON;
 use Data::Dumper;
@@ -173,26 +174,31 @@ sub get_file($$$)
     if(defined($$post{tim}) && defined($$post{ext}))
     {
         my $url = "http://i.4cdn.org/$$board{board}/$$post{tim}$$post{ext}";
+        my $ext;
+        ($ext = $$post{ext}) =~ s/\.//g;
+        my $path = "$semantic_url_dir/$ext";
+
+        make_path($path);
 
         $cv->begin();
 
-        download($url, "$semantic_url_dir/$$post{tim}$$post{ext}", sub {
+        download($url, "$path/$$post{tim}$$post{ext}", sub {
                 my ($download_status, $headers) = @_;
 
                 if ($download_status) 
                 {
                     print $url, 
-                    " -> $semantic_url_dir/$$post{tim}$$post{ext} - download complete !\n";
+                    " -> $path/$$post{tim}$$post{ext} - download complete !\n";
                 } 
                 elsif (defined($download_status)) 
                 {
                     print STDERR $url, 
-                    " -> $semantic_url_dir/$$post{tim}$$post{ext} - download failed, please retry later !\n";
+                    " -> $path/$$post{tim}$$post{ext} - download failed, please retry later !\n";
                 } 
                 else 
                 {
                     print STDERR $url, 
-                    " -> $semantic_url_dir/$$post{tim}$$post{ext} - download failed, HTTP Status Code: ", 
+                    " -> $path/$$post{tim}$$post{ext} - download failed, HTTP Status Code: ", 
                     $$headers{Status}, 
                     ", Reason: ", 
                     $$headers{Reason}, 
@@ -214,10 +220,7 @@ sub get_thread($$)
 
     my $semantic_url_dir = "$$params{dir}/4chan/$$thread{semantic_url}";
 
-    if(! -d $semantic_url_dir)
-    {
-        mkdir($semantic_url_dir);
-    }
+    make_path($semantic_url_dir);
 
     $cv->begin();
 
@@ -256,13 +259,10 @@ sub get_catalog($)
                 {
                     for my $thread (@{$$page{threads}})
                     {
-
-                            get_thread($board, $thread);
-
+                        get_thread($board, $thread);
                     }
                 }
             }
-
 
             $cv->end();
         }  
@@ -305,10 +305,7 @@ try
         }
     }
 
-    if(! -d "$$params{dir}/4chan")
-    {
-        mkdir("$$params{dir}/4chan");
-    }
+    make_path("$$params{dir}/4chan");
 
     get_boards();
 
