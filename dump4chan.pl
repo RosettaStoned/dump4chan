@@ -6,6 +6,7 @@ use warnings;
 use autodie;
 use Try::Tiny;
 use AnyEvent;
+use AnyEvent::IO;
 use AnyEvent::HTTP;
 use File::Path qw(make_path remove_tree);
 use Getopt::Long;
@@ -30,7 +31,6 @@ GetOptions(
     "dir|d=s" => \$$params{dir},
     "boards|b=s" => \$$params{regexp}{boards},
 );
-
 
 my $cv = AE::cv();
 
@@ -282,10 +282,17 @@ sub get_boards()
             {
                 for my $board (@{$$data{boards}})
                 {
-                    if($$board{board} =~ $$params{regexp}{boards})
-                    {
+					if(defined($$params{regexp}{boards}))
+					{
+						if($$board{board} =~ $$params{regexp}{boards})
+						{
+							get_catalog($board);
+						}
+					}
+					else
+					{
                         get_catalog($board);
-                    }
+					}
                 }
             }
 
